@@ -7,40 +7,24 @@
 
 #include "exponent-time-iterable.hpp"
 
-void Exponent::clear_subiteration()
+ExponentProblem::ExponentProblem(IIntegrationMethod* continious_iterator, double initial_value) :
+    m_continious_iterator(continious_iterator), m_variable(initial_value),
+    m_exp_logic(m_variable, [](double t, double x) { return x; } )
 {
-	xCurrent = xPrevious;
-	delta = 0.0;
+    m_continious_iterator->set_variable(&m_variable);
+    m_continious_iterator->set_logic(&m_exp_logic);
+    m_time_iterator.set_continious_iterator(m_continious_iterator);
 }
 
-void Exponent::calculate_secondary_values(double time)
+void ExponentProblem::iterate(double t)
 {
-	tmp = xCurrent;
+    m_time_iterator.set_time(0.0);
+    m_time_iterator.set_step(0.0001);
+    m_time_iterator.set_stop_time(t);
+    m_time_iterator.run();
 }
 
-void Exponent::calculate_rhs(double time)
+double ExponentProblem::value()
 {
-    //UNUSED_ARG(time);
-	rhs = tmp;
-}
-
-void Exponent::add_rhs_to_delta(double m)
-{
-	delta += rhs*m;
-}
-
-void Exponent::make_sub_iteration(double dt)
-{
-	xCurrent = xPrevious + rhs*dt;
-}
-
-void Exponent::step()
-{
-	xCurrent = xPrevious = xPrevious + delta;
-	delta = 0;
-}
-
-double Exponent::getValue()
-{
-	return xPrevious;
+    return m_variable.current_value();
 }

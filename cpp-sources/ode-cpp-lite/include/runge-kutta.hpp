@@ -12,13 +12,15 @@
 
 namespace sotm {
 
-class RungeKuttaIterator : public ContinuousTimeIteratorBase
+class RungeKuttaIterator : public IntegrationMethodBase
 {
 public:
+    RungeKuttaIterator(double step_precision = 1e-3);
 	double iterate(double dt) override final;
 
 private:
     void make_subiterations(double dt);
+    double m_step_precision;
 };
 
 }  // namespace sotm

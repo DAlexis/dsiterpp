@@ -12,45 +12,34 @@ using namespace std;
 
 TEST(RungeKutta, ExponentDiffEq)
 {
-	Exponent e;
-	RungeKuttaIterator euler;
-	TimeIterator iter(&e, &euler);
+    RungeKuttaIterator rk;
+    ExponentProblem exp_problem(&rk, 1.0);
+    double time_limit = 3.0;
+    exp_problem.iterate(time_limit);
 
-	double timeLimit = 3.0;
-    iter.set_time(0.0);
-    iter.set_step(0.0001);
-    iter.set_stop_time(timeLimit);
-	iter.run();
-	ASSERT_NEAR(exp(timeLimit), e.getValue(), 0.01);
+    ASSERT_NEAR(exp(time_limit), exp_problem.value(), 0.01);
 }
 
 TEST(RungeKutta, ComparisionWithEuler)
 {
+    double time_limit = 3.0;
 	double deltaRunge, deltaEuler;
 	{
-		Exponent e;
-		RungeKuttaIterator euler;
-		TimeIterator iter(&e, &euler);
+        RungeKuttaIterator rk;
+        ExponentProblem exp_problem(&rk, 1.0);
 
-		double timeLimit = 3.0;
-        iter.set_time(0.0);
-        iter.set_step(0.0001);
-        iter.set_stop_time(timeLimit);
-		iter.run();
-		deltaRunge = fabs(exp(timeLimit)- e.getValue());
+        exp_problem.iterate(time_limit);
+        deltaRunge = fabs(exp(time_limit)- exp_problem.value());
 	}
 	{
-		Exponent e;
-		EulerExplicitIterator euler;
-		TimeIterator iter(&e, &euler);
 
-		double timeLimit = 3.0;
-        iter.set_time(0.0);
-        iter.set_step(0.0001);
-        iter.set_stop_time(timeLimit);
-		iter.run();
-		deltaEuler = fabs(exp(timeLimit)- e.getValue());
+		EulerExplicitIterator euler;
+        ExponentProblem exp_problem(&euler, 1.0);
+
+        exp_problem.iterate(time_limit);
+        deltaEuler = fabs(exp(time_limit)- exp_problem.value());
 	}
 	ASSERT_LE(deltaRunge, deltaEuler);
 	ASSERT_LE(deltaRunge / deltaEuler, 1e-4);
 }
+

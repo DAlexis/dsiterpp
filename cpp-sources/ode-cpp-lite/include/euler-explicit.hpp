@@ -11,7 +11,7 @@
 #include "include/time-iter.hpp"
 
 
-class EulerExplicitIterator : public ContinuousTimeIteratorBase
+class EulerExplicitIterator : public IntegrationMethodBase
 {
 public:
 	double iterate(double dt) override final;

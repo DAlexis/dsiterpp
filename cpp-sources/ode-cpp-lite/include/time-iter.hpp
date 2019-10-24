@@ -2,42 +2,23 @@
 #define TIME_ITER_HPP
 
 #include <vector>
+#include <functional>
 #include <limits>
 #include <cstddef>
 #include <cmath>
 
-struct ContiniousIteratorParameters;
+struct IntegrationParameters;
 struct ContiniousIteratorMetrics;
 
-/**
- * This class represent some lines from system x'=f(time, x)
- * This interface suppose that users implementation contains those vectors (or may be named values):
- * xPrevious
- * xCurrent
- * rhs
- * xDelta
- *
- * All operations over this interface are system structure-safe
- */
-class IContinuousTimeIterable
+class IVariable
 {
 public:
-    constexpr static double stepsCountNotMatter = std::numeric_limits<double>::max();
-    virtual ~IContinuousTimeIterable() { }
+    virtual ~IVariable() {}
 
-
+    /**
+     * Clear current value of delta and make x_current = x_previous
+     */
     virtual void clear_subiteration() = 0;
-
-    /** Calculate secondary values thats are trivial function of quantities and does not
-     * contain any differential operators. This function should be called for all objects
-     * before calling calculateRHS
-     */
-    virtual void calculate_secondary_values(double time) = 0;
-
-    /** Calculate right hand side with values of
-     * f(time, xCurrent, xCurrent of other objects, secondaryValues of other objects)
-     */
-    virtual void calculate_rhs(double time) = 0;
 
     /**
      * Adds rhs multiplied by m to xDelta
@@ -49,57 +30,110 @@ public:
      */
     virtual void make_sub_iteration(double dt) = 0;
 
-    /*
+    /**
      * Makes xCurrent = xPrevious = xPrevious + xDelta; xDelta = 0;
      */
     virtual void step() = 0;
 
     /**
-     * Function used for precision control.
-     *
-     * Get square of norm of difference between delta and last delta
+     * For precision control.
+     * Add all current values to vector. Vector may already contain something, use push_back
      */
-    virtual double get_delta_difference_norm_sqr() { return 0.0; }
+    virtual void collect_values(std::vector<double>& values) = 0;
 
     /**
-     * Function used for precision control.
-     *
-     * Get square of norm of difference between delta and last delta
+     * For precision control.
+     * Add all current deltas to vector. Vector may already contain something, use push_back
      */
-    virtual double get_delta_norm_sqr() { return 0.0; }
-
-    /**
-     * Function used for precision control.
-     *
-     * Get minimal steps count needed to reach zero from maximal value
-     * for any variable
-     */
-    virtual double get_minimal_steps_count() { return stepsCountNotMatter; }
+    virtual void collect_deltas(std::vector<double>& deltas) = 0;
 };
 
-template<typename VectorType>
-class VectorVariable : public IContinuousTimeIterable
+
+class IRHS
 {
 public:
+    virtual ~IRHS() {}
+
+    /**
+     * Tasks that done before iteration (i.e. grid refinment)
+     */
+    virtual void pre_iteration_job(double time) {}
+
+    /**
+     * Tasks that done before sub iteration calculation
+     */
+    virtual void pre_sub_iteration_job(double time) {}
+
+    /** Calculate right hand side with values of
+     * f(time, xCurrent, xCurrent of other objects, secondaryValues of other objects)
+     */
+    virtual void calculate_rhs(double time) = 0;
+};
+
+class VariableScalar : public IVariable
+{
+public:
+    VariableScalar(double value = 0) : m_previous_value(value) { clear_subiteration(); }
+    void clear_subiteration() override { m_current_value = m_previous_value; m_delta = 0.0;}
+    void add_rhs_to_delta(double m) override { m_delta += m_rhs * m; }
+    void make_sub_iteration(double dt) override { m_current_value = m_previous_value + m_rhs * dt; }
+    void step() override { m_current_value = m_previous_value = m_previous_value + m_delta; m_delta = 0.0;}
+    void collect_values(std::vector<double>& values) override { values.push_back(m_current_value); }
+    void collect_deltas(std::vector<double>& deltas) override { deltas.push_back(m_delta); }
+
+    // API for IContinuousIterableLogic
+    double current_value() { return m_current_value; }
+    void set_rhs(double rhs) { m_rhs = rhs; }
+
+    // API for usage
+    operator double&()
+    {
+        return m_previous_value;
+    }
+private:
+    double m_previous_value;
+    double m_current_value;
+    double m_delta;
+    double m_rhs;
+};
+
+class ContinuousIterableLogicScalar : public IRHS
+{
+public:
+    using RHSFunction = std::function<double(double time, double x)>;
+    ContinuousIterableLogicScalar(VariableScalar& scalar, RHSFunction rhs) :
+        m_scalar(scalar), m_rhs_function(rhs)
+    {
+    }
+
+    void calculate_rhs(double time) override
+    {
+        double rhs = m_rhs_function(time, m_scalar.current_value());
+        m_scalar.set_rhs(rhs);
+    }
 
 private:
+    VariableScalar& m_scalar;
+    RHSFunction m_rhs_function;
 
 };
 
-class IBifurcationTimeIterable
+class IBifurcator
 {
 public:
-    virtual ~IBifurcationTimeIterable() {}
+    virtual ~IBifurcator() {}
 
     virtual void prepare_bifurcation(double time, double dt) = 0;
     virtual void do_bifurcation(double time, double dt) = 0;
 };
 
-class IContinuousTimeIterator
+class IIntegrationMethod
 {
 public:
-    virtual ~IContinuousTimeIterator() {}
-    virtual void set_iterable(IContinuousTimeIterable* target) = 0;
+    virtual ~IIntegrationMethod() {}
+    virtual void set_variable(IVariable* variable) = 0;
+    virtual void set_logic(IRHS* variable) = 0;
+
     /**
      * Make one iteration. If timestep adaptation enabled, timestep may be changed
      * @return new timestep
@@ -107,10 +141,8 @@ public:
     virtual double iterate(double dt) = 0;
     virtual void set_time(double time) = 0;
     virtual double time() = 0;
-    virtual void set_step_bounds(double min, double max) = 0;
-    virtual double get_min_step() = 0;
-    virtual double get_max_step() = 0;
-    virtual void set_parameters(ContiniousIteratorParameters* parameters) = 0;
+    virtual void set_parameters(IntegrationParameters* parameters) = 0;
+    virtual const IntegrationParameters* parameters() = 0;
     virtual const ContiniousIteratorMetrics& metrics() = 0;
 };
 
@@ -122,65 +154,19 @@ public:
     virtual double get_next_time() = 0;
 };
 
-class Variable
-{
-public:
-    Variable(double initValue = 0.0) :
-        previous(initValue), current(initValue)
-    {
-        update_max_abs();
-    }
-
-    void clear_sub_iteration() { current = previous; delta = 0.0; }
-    void make_sub_iteration(double dt) { current = previous + rhs * dt; }
-    void add_rhs_to_delta(double m) { delta += rhs * m; }
-    void step()
-    {
-        current = previous = previous + delta;
-        delta = 0.0;
-        update_max_abs();
-    }
-    void set_initial(double value) { previous = current = value; }
-
-    double get_current_steps_count()
-    {
-        if (maxAbs == 0.0 || delta*previous > 0)
-            return IContinuousTimeIterable::stepsCountNotMatter;
-        return maxAbs / fabs(delta);
-    }
-
-    void set(double value)
-    {
-        previous = current = value;
-        delta = 0;
-        rhs = 0;
-    }
-
-    double previous;
-    double current;
-    double delta = 0.0;
-    double rhs = 0.0;
-
-private:
-    double maxAbs = 0.0;
-
-     void update_max_abs()
-    {
-        double abs = fabs(previous);
-        if (abs > maxAbs)
-            maxAbs = abs;
-    }
-};
-
-struct ContiniousIteratorParameters
+struct IntegrationParameters
 {
     bool autoStepAdjustment = false;
-    double iterationsPerAmplitudeMin = 3;
-    double iterationsPerAmplitudeMax = 20;
+    double max_step = 0.001;
+    double min_step = 0.00001;
+    double target_precision = 0.001;
+
+/*
     enum class VerboseLevel {
         none = 0, less, more
     };
     VerboseLevel outputVerboseLevel = VerboseLevel::none;
+*/
 };
 
 struct ContiniousIteratorMetrics
@@ -214,48 +200,47 @@ private:
     double m_period = 1.0;
 };
 
-class ContinuousTimeIteratorBase : public IContinuousTimeIterator
+class IntegrationMethodBase : public IIntegrationMethod
 {
 public:
-    void set_iterable(IContinuousTimeIterable* target) override;
+    void set_variable(IVariable* variable) override;
+    void set_logic(IRHS* logic) override;
     void set_time(double time) override;
     double time() override;
-    void set_step_bounds(double min, double max) override;
-    double get_min_step() override;
-    double get_max_step() override;
-    void set_parameters(ContiniousIteratorParameters* parameters) override;
+
+    void set_parameters(IntegrationParameters* parameters) override;
+    const IntegrationParameters* parameters() override;
+
     const ContiniousIteratorMetrics& metrics() override;
 
 protected:
     double m_time = 0;
-    IContinuousTimeIterable* m_target = nullptr;
-    double m_stepMin = 0.0, m_stepMax = 0.0;
-    static const ContiniousIteratorParameters defaultParameters;
-    const ContiniousIteratorParameters *m_parameters = &defaultParameters;
+    IVariable *m_variable = nullptr;
+    IRHS *m_rhs = nullptr;
+
+    const IntegrationParameters *m_parameters = nullptr;
     ContiniousIteratorMetrics m_metrics;
 };
 
 class TimeIterator
 {
 public:
-    TimeIterator(
-        IContinuousTimeIterable* continiousIterable,
-        IContinuousTimeIterator* continiousIterator,
-        IBifurcationTimeIterable* bifurcationIterable = nullptr
-    );
+    TimeIterator();
+
+    void set_continious_iterator(IIntegrationMethod* continious_iterator);
+    void set_bifurcator(IBifurcator* bifurcator);
 
     void set_time(double time);
     void set_bifurcation_run_period(double bifurcationPeriod);
-    void set_step(double dt);
-    void set_step_bounds(double min, double max);
     void set_stop_time(double stopTime);
     void add_hook(ITimeHook* hook);
 
+    void set_step(double dt);
     double get_step();
-    double get_timestep_min();
-    double get_timestep_max();
     double get_stop_time();
     double get_time();
+
+    IntegrationParameters& parameters();
 
     bool is_done();
 
@@ -267,7 +252,7 @@ public:
      */
     void stop();
 
-    ContiniousIteratorParameters& continiousIterParameters();
+    IntegrationParameters& continiousIterParameters();
 
 private:
     void call_hook();
@@ -282,11 +267,10 @@ private:
     size_t m_nextHook = 0;
     bool m_needStop = false;
 
-    ContiniousIteratorParameters m_contIteratorParameters;
+    IntegrationParameters m_integration_parameters;
 
-    IContinuousTimeIterable* m_continiousIterable;
-    IContinuousTimeIterator* m_continiousIterator;
-    IBifurcationTimeIterable* m_bifurcationIterable;
+    IIntegrationMethod* m_continiousIterator = nullptr;
+    IBifurcator* m_bifurcationIterable = nullptr;
 
     std::vector<ITimeHook*> m_timeHooks;
 };
@@ -300,7 +284,6 @@ public:
 private:
     TimeIterator* m_iterator;
 };
-
 
 
 #endif // TIME_ITER_HPP

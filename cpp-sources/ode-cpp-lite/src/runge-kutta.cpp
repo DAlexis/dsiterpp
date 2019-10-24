@@ -12,21 +12,21 @@ using namespace sotm;
 using namespace std;
 
 
+RungeKuttaIterator::RungeKuttaIterator(double step_precision) :
+    m_step_precision(step_precision)
+{
+}
+
 double RungeKuttaIterator::iterate(double dt)
 {
-	if (m_parameters->autoStepAdjustment)
-	{
-		if (dt < m_stepMin)
-			dt = m_stepMin;
-
-		if (dt > m_stepMax)
-			dt = m_stepMax;
-	}
+    m_rhs->pre_iteration_job(m_time);
 
 	for(;;) {
 		m_metrics.totalStepCalculations++;
         make_subiterations(dt);
 
+        break;
+/*
 		// If step adjustment disabled
 		if (!m_parameters->autoStepAdjustment)
 			break;
@@ -76,45 +76,47 @@ double RungeKuttaIterator::iterate(double dt)
 			//m_target->clearSubiteration();
 			//continue;
 		}
-		break;
+        break;*/
 	}
 
-	m_target->step();
+    m_variable->step();
 	m_metrics.timeIterations++;
     //m_metrics.complexity +=
 	m_time += dt;
 	//cout << (int)m_parameters->outputVerboseLevel << endl;
+    /*
 	if (m_parameters->outputVerboseLevel != ContiniousIteratorParameters::VerboseLevel::none)
 	{
 		cout << "[R-K4] Iteration done. t = " << m_time
 				<< ", dt = " << dt
 				<< ", efficiency = " << m_metrics.adaptationEfficiency() << endl;
-	}
+    }*/
 	return dt;
 }
 
 void RungeKuttaIterator::make_subiterations(double dt)
 {
 	// k1 = f(tn, xn)
-    m_target->calculate_secondary_values(m_time);
-    m_target->calculate_rhs(m_time);
-    m_target->add_rhs_to_delta(dt / 6.0);
+    //m_target->calculate_secondary_values(m_time);
+    m_rhs->pre_sub_iteration_job(m_time);
+    m_rhs->calculate_rhs(m_time);
+    m_variable->add_rhs_to_delta(dt / 6.0);
 
 	// k2 = f(tn + dt/2, xn + dt/2*k1)
-    m_target->make_sub_iteration(dt / 2.0);
-    m_target->calculate_secondary_values(m_time + dt / 2.0);
-    m_target->calculate_rhs(m_time + dt / 2.0);
-    m_target->add_rhs_to_delta(dt / 3.0);
+    m_variable->make_sub_iteration(dt / 2.0);
+    m_rhs->pre_sub_iteration_job(m_time + dt / 2.0);
+    m_rhs->calculate_rhs(m_time + dt / 2.0);
+    m_variable->add_rhs_to_delta(dt / 3.0);
 
 	// k3 = f(tn + dt/2, xn + dt/2*k2)
-    m_target->make_sub_iteration(dt / 2.0);
-    m_target->calculate_secondary_values(m_time + dt / 2.0);
-    m_target->calculate_rhs(m_time + dt / 2.0);
-    m_target->add_rhs_to_delta(dt / 3.0);
+    m_variable->make_sub_iteration(dt / 2.0);
+    m_rhs->pre_sub_iteration_job(m_time + dt / 2.0);
+    m_rhs->calculate_rhs(m_time + dt / 2.0);
+    m_variable->add_rhs_to_delta(dt / 3.0);
 
 	// k3 = f(tn + dt, xn + dt*k3)
-    m_target->make_sub_iteration(dt);
-    m_target->calculate_secondary_values(m_time + dt);
-    m_target->calculate_rhs(m_time + dt);
-    m_target->add_rhs_to_delta(dt / 6.0);
+    m_variable->make_sub_iteration(dt);
+    m_rhs->pre_sub_iteration_job(m_time + dt);
+    m_rhs->calculate_rhs(m_time + dt);
+    m_variable->add_rhs_to_delta(dt / 6.0);
 }

@@ -10,30 +10,19 @@
 
 #include "include/time-iter.hpp"
 
-
-/**
- * Simpliest ordinary differential equation
- * x' = x
- * with
- * x = 1 at t = 0
- */
-class Exponent : public IContinuousTimeIterable
+class ExponentProblem
 {
 public:
-    void clear_subiteration() override;
-    void calculate_secondary_values(double time) override;
-    void calculate_rhs(double time) override;
-    void add_rhs_to_delta(double m) override;
-    void make_sub_iteration(double dt) override;
-	void step() override;
-	double getValue();
+    ExponentProblem(IIntegrationMethod* continious_iterator, double initial_value = 1.0);
+    void iterate(double t);
+    double value();
 
 private:
-	double xPrevious = 1;
-	double xCurrent = xPrevious;
-	double rhs = 0;
-	double delta = 0;
-	double tmp = 0; // Secondary variable that will be used as RHS
+    IIntegrationMethod* m_continious_iterator;
+    VariableScalar m_variable;
+    ContinuousIterableLogicScalar m_exp_logic;
+    TimeIterator m_time_iterator;
+
 };
 
 
