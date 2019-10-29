@@ -17,13 +17,13 @@ RungeKuttaIterator::RungeKuttaIterator(double step_precision) :
 {
 }
 
-double RungeKuttaIterator::iterate(double dt)
+double RungeKuttaIterator::calculate_delta(double t, double dt)
 {
-    m_rhs->pre_iteration_job(m_time);
+    m_rhs->pre_iteration_job(t);
 
 	for(;;) {
 		m_metrics.totalStepCalculations++;
-        make_subiterations(dt);
+        make_subiterations(t, dt);
 
         break;
 /*
@@ -79,10 +79,8 @@ double RungeKuttaIterator::iterate(double dt)
         break;*/
 	}
 
-    m_variable->step();
 	m_metrics.timeIterations++;
     //m_metrics.complexity +=
-	m_time += dt;
 	//cout << (int)m_parameters->outputVerboseLevel << endl;
     /*
 	if (m_parameters->outputVerboseLevel != ContiniousIteratorParameters::VerboseLevel::none)
@@ -94,29 +92,29 @@ double RungeKuttaIterator::iterate(double dt)
 	return dt;
 }
 
-void RungeKuttaIterator::make_subiterations(double dt)
+void RungeKuttaIterator::make_subiterations(double t, double dt)
 {
 	// k1 = f(tn, xn)
     //m_target->calculate_secondary_values(m_time);
-    m_rhs->pre_sub_iteration_job(m_time);
-    m_rhs->calculate_rhs(m_time);
+    m_rhs->pre_sub_iteration_job(t);
+    m_rhs->calculate_rhs(t);
     m_variable->add_rhs_to_delta(dt / 6.0);
 
 	// k2 = f(tn + dt/2, xn + dt/2*k1)
     m_variable->make_sub_iteration(dt / 2.0);
-    m_rhs->pre_sub_iteration_job(m_time + dt / 2.0);
-    m_rhs->calculate_rhs(m_time + dt / 2.0);
+    m_rhs->pre_sub_iteration_job(t + dt / 2.0);
+    m_rhs->calculate_rhs(t + dt / 2.0);
     m_variable->add_rhs_to_delta(dt / 3.0);
 
 	// k3 = f(tn + dt/2, xn + dt/2*k2)
     m_variable->make_sub_iteration(dt / 2.0);
-    m_rhs->pre_sub_iteration_job(m_time + dt / 2.0);
-    m_rhs->calculate_rhs(m_time + dt / 2.0);
+    m_rhs->pre_sub_iteration_job(t + dt / 2.0);
+    m_rhs->calculate_rhs(t + dt / 2.0);
     m_variable->add_rhs_to_delta(dt / 3.0);
 
 	// k3 = f(tn + dt, xn + dt*k3)
     m_variable->make_sub_iteration(dt);
-    m_rhs->pre_sub_iteration_job(m_time + dt);
-    m_rhs->calculate_rhs(m_time + dt);
+    m_rhs->pre_sub_iteration_job(t + dt);
+    m_rhs->calculate_rhs(t + dt);
     m_variable->add_rhs_to_delta(dt / 6.0);
 }

@@ -6,12 +6,16 @@ set(LIB_SOURCE
     ${PROJECT_SOURCE_DIR}/src/euler-explicit.cpp
     ${PROJECT_SOURCE_DIR}/src/time-iter.cpp
     ${PROJECT_SOURCE_DIR}/src/runge-kutta.cpp
+    ${PROJECT_SOURCE_DIR}/src/error-estimator.cpp
+    ${PROJECT_SOURCE_DIR}/src/runge-error-estimator.cpp
 )
 
 set(LIB_HPP
     ${PROJECT_SOURCE_DIR}/include/time-iter.hpp
     ${PROJECT_SOURCE_DIR}/include/euler-explicit.hpp
     ${PROJECT_SOURCE_DIR}/include/runge-kutta.hpp
+    ${PROJECT_SOURCE_DIR}/include/error-estimator.hpp
+    ${PROJECT_SOURCE_DIR}/include/runge-error-estimator.hpp
 )
 
 # Include dirs that are used and will be exported 

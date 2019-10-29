@@ -13,12 +13,12 @@
 class ExponentProblem
 {
 public:
-    ExponentProblem(IIntegrationMethod* continious_iterator, double initial_value = 1.0);
+    ExponentProblem(IIntegrator* continious_iterator, double initial_value = 1.0);
     void iterate(double t);
     double value();
 
 private:
-    IIntegrationMethod* m_continious_iterator;
+    IIntegrator* m_continious_iterator;
     VariableScalar m_variable;
     ContinuousIterableLogicScalar m_exp_logic;
     TimeIterator m_time_iterator;

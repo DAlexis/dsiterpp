@@ -16,10 +16,10 @@ class RungeKuttaIterator : public IntegrationMethodBase
 {
 public:
     RungeKuttaIterator(double step_precision = 1e-3);
-	double iterate(double dt) override final;
+    double calculate_delta(double t, double dt) override final;
 
 private:
-    void make_subiterations(double dt);
+    void make_subiterations(double t, double dt);
     double m_step_precision;
 };
 

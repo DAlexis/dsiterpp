@@ -39,28 +39,12 @@ void IntegrationMethodBase::set_logic(IRHS* logic)
     m_rhs = logic;
 }
 
-void IntegrationMethodBase::set_time(double time)
+IVariable* IntegrationMethodBase::get_variable()
 {
-	m_time = time;
+    return m_variable;
 }
 
-double IntegrationMethodBase::time()
-{
-	return m_time;
-}
-
-
-void IntegrationMethodBase::set_parameters(IntegrationParameters* parameters)
-{
-    m_parameters = parameters;
-}
-
-const IntegrationParameters* IntegrationMethodBase::parameters()
-{
-    return m_parameters;
-}
-
-const ContiniousIteratorMetrics& IntegrationMethodBase::metrics()
+const IntegratorMetrics& IntegrationMethodBase::metrics()
 {
 	return m_metrics;
 }
@@ -74,10 +58,9 @@ TimeIterator::TimeIterator()
     //ASSERT(continiousIterator != nullptr, "continiousIterator cannot be a nullptr");
 }
 
-void TimeIterator::set_continious_iterator(IIntegrationMethod* continious_iterator)
+void TimeIterator::set_continious_iterator(IIntegrator* continious_iterator)
 {
     m_continiousIterator = continious_iterator;
-    m_continiousIterator->set_parameters(&m_integration_parameters);
 }
 
 void TimeIterator::set_bifurcator(IBifurcator* bifurcator)
@@ -87,7 +70,6 @@ void TimeIterator::set_bifurcator(IBifurcator* bifurcator)
 
 void TimeIterator::set_time(double time)
 {
-    m_continiousIterator->set_time(time);
 	m_lastBifurcationTime = time;
 }
 
@@ -124,36 +106,33 @@ double TimeIterator::get_stop_time()
 
 double TimeIterator::get_time()
 {
-	return m_continiousIterator->time();
-}
-
-IntegrationParameters& TimeIterator::parameters()
-{
-    return m_integration_parameters;
+    return m_time;
 }
 
 bool TimeIterator::is_done()
 {
-	return m_continiousIterator->time() >= m_stopTime;
+    return m_time >= m_stopTime;
 }
 
 void TimeIterator::iterate()
 {
-	double time = m_continiousIterator->time();
-	m_dt = m_continiousIterator->iterate(m_dt);
+    m_dt = m_continiousIterator->calculate_delta(m_time, m_dt);
+    m_continiousIterator->get_variable()->step();
 
 	if (
-			(m_bifurcationPeriod == 0.0 || time - m_lastBifurcationTime >= m_bifurcationPeriod) &&
+            (m_bifurcationPeriod == 0.0 || m_time - m_lastBifurcationTime >= m_bifurcationPeriod) &&
 			m_bifurcationIterable != nullptr
 		)
 	{
-		double dt = time - m_lastBifurcationTime;
-        m_bifurcationIterable->prepare_bifurcation(time, dt);
-        m_bifurcationIterable->do_bifurcation(time, dt);
-		m_lastBifurcationTime = time;
+        double dt = m_time - m_lastBifurcationTime;
+        m_bifurcationIterable->prepare_bifurcation(m_time, dt);
+        m_bifurcationIterable->do_bifurcation(m_time, dt);
+        m_lastBifurcationTime = m_time;
 	}
     call_hook();
 
+    m_time += m_dt;
+/*
     if (m_integration_parameters.autoStepAdjustment)
     {
         if (m_dt < m_integration_parameters.min_step)
@@ -161,17 +140,17 @@ void TimeIterator::iterate()
 
         if (m_dt > m_integration_parameters.max_step)
             m_dt = m_integration_parameters.max_step;
-    }
+    }*/
 }
 
 void TimeIterator::call_hook()
 {
 	if (m_timeHooks.empty())
 		return;
-	double time = m_continiousIterator->time();
-	if (time >= m_nextHookTime)
+
+    if (m_time >= m_nextHookTime)
 	{
-        m_timeHooks[m_nextHook]->run_hook(time);
+        m_timeHooks[m_nextHook]->run_hook(m_time);
         find_next_hook();
 	}
 }
@@ -204,9 +183,4 @@ void TimeIterator::run()
 void TimeIterator::stop()
 {
 	m_needStop = true;
-}
-
-IntegrationParameters& TimeIterator::continiousIterParameters()
-{
-    return m_integration_parameters;
 }

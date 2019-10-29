@@ -7,7 +7,7 @@
 
 #include "exponent-time-iterable.hpp"
 
-ExponentProblem::ExponentProblem(IIntegrationMethod* continious_iterator, double initial_value) :
+ExponentProblem::ExponentProblem(IIntegrator* continious_iterator, double initial_value) :
     m_continious_iterator(continious_iterator), m_variable(initial_value),
     m_exp_logic(m_variable, [](double t, double x) { return x; } )
 {

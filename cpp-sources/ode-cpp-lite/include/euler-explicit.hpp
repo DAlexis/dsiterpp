@@ -14,7 +14,7 @@
 class EulerExplicitIterator : public IntegrationMethodBase
 {
 public:
-	double iterate(double dt) override final;
+    double calculate_delta(double t, double dt) override final;
 };
 
 

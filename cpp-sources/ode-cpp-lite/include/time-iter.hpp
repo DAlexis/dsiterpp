@@ -8,7 +8,7 @@
 #include <cmath>
 
 struct IntegrationParameters;
-struct ContiniousIteratorMetrics;
+struct IntegratorMetrics;
 
 class IVariable
 {
@@ -127,23 +127,21 @@ public:
     virtual void do_bifurcation(double time, double dt) = 0;
 };
 
-class IIntegrationMethod
+class IIntegrator
 {
 public:
-    virtual ~IIntegrationMethod() {}
+    virtual ~IIntegrator() {}
     virtual void set_variable(IVariable* variable) = 0;
     virtual void set_logic(IRHS* variable) = 0;
 
+    virtual IVariable* get_variable() = 0;
+
     /**
-     * Make one iteration. If timestep adaptation enabled, timestep may be changed
+     * Calculate delta for dt. If timestep adaptation enabled, timestep may be changed
      * @return new timestep
      */
-    virtual double iterate(double dt) = 0;
-    virtual void set_time(double time) = 0;
-    virtual double time() = 0;
-    virtual void set_parameters(IntegrationParameters* parameters) = 0;
-    virtual const IntegrationParameters* parameters() = 0;
-    virtual const ContiniousIteratorMetrics& metrics() = 0;
+    virtual double calculate_delta(double t, double dt) = 0;
+    virtual const IntegratorMetrics& metrics() = 0;
 };
 
 class ITimeHook
@@ -154,22 +152,7 @@ public:
     virtual double get_next_time() = 0;
 };
 
-struct IntegrationParameters
-{
-    bool autoStepAdjustment = false;
-    double max_step = 0.001;
-    double min_step = 0.00001;
-    double target_precision = 0.001;
-
-/*
-    enum class VerboseLevel {
-        none = 0, less, more
-    };
-    VerboseLevel outputVerboseLevel = VerboseLevel::none;
-*/
-};
-
-struct ContiniousIteratorMetrics
+struct IntegratorMetrics
 {
     size_t totalStepCalculations = 0;
     size_t timeIterations = 0;
@@ -200,26 +183,20 @@ private:
     double m_period = 1.0;
 };
 
-class IntegrationMethodBase : public IIntegrationMethod
+class IntegrationMethodBase : public IIntegrator
 {
 public:
     void set_variable(IVariable* variable) override;
     void set_logic(IRHS* logic) override;
-    void set_time(double time) override;
-    double time() override;
 
-    void set_parameters(IntegrationParameters* parameters) override;
-    const IntegrationParameters* parameters() override;
+    IVariable* get_variable() override;
 
-    const ContiniousIteratorMetrics& metrics() override;
+    const IntegratorMetrics& metrics() override;
 
 protected:
-    double m_time = 0;
     IVariable *m_variable = nullptr;
     IRHS *m_rhs = nullptr;
-
-    const IntegrationParameters *m_parameters = nullptr;
-    ContiniousIteratorMetrics m_metrics;
+    IntegratorMetrics m_metrics;
 };
 
 class TimeIterator
@@ -227,7 +204,7 @@ class TimeIterator
 public:
     TimeIterator();
 
-    void set_continious_iterator(IIntegrationMethod* continious_iterator);
+    void set_continious_iterator(IIntegrator* continious_iterator);
     void set_bifurcator(IBifurcator* bifurcator);
 
     void set_time(double time);
@@ -240,8 +217,6 @@ public:
     double get_stop_time();
     double get_time();
 
-    IntegrationParameters& parameters();
-
     bool is_done();
 
     void iterate();
@@ -252,11 +227,11 @@ public:
      */
     void stop();
 
-    IntegrationParameters& continiousIterParameters();
-
 private:
     void call_hook();
     void find_next_hook();
+
+    double m_time = 0.0;
 
     double m_stopTime = 1.0;
     double m_dt = 0.01;
@@ -267,9 +242,7 @@ private:
     size_t m_nextHook = 0;
     bool m_needStop = false;
 
-    IntegrationParameters m_integration_parameters;
-
-    IIntegrationMethod* m_continiousIterator = nullptr;
+    IIntegrator* m_continiousIterator = nullptr;
     IBifurcator* m_bifurcationIterable = nullptr;
 
     std::vector<ITimeHook*> m_timeHooks;
