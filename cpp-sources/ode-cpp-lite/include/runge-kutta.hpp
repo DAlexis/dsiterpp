@@ -8,21 +8,15 @@
 #ifndef RUNGE_KUTTA_HPP_INCLUDED
 #define RUNGE_KUTTA_HPP_INCLUDED
 
-#include "include/time-iter.hpp"
-
-namespace sotm {
+#include "include/integration.hpp"
 
 class RungeKuttaIterator : public IntegrationMethodBase
 {
 public:
-    RungeKuttaIterator(double step_precision = 1e-3);
-    double calculate_delta(double t, double dt) override final;
+    void calculate_delta(double t, double dt) override final;
 
 private:
     void make_subiterations(double t, double dt);
-    double m_step_precision;
 };
-
-}  // namespace sotm
 
 #endif // RUNGE_KUTTA_HPP_INCLUDED

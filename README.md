@@ -3,13 +3,15 @@ Simple interface-based lib to solve ordinary defferential equations
 
 ## Tasks
 
-### HIght
+### Hight
 
-[ ] Error estimation: interface, move out from RK
+[x] Error estimation: interface, move out from RK
+
+[ ] Unit test for error estimator
 
 ### Low
 
-[ ] Split headers?
+[x] Split headers?
 
 [ ] Metric: count of times when dt wants to be lesser than minimal
 

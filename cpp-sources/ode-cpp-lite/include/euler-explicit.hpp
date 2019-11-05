@@ -8,13 +8,13 @@
 #ifndef EULER_EXPLICI_HPP_INCLUDED
 #define EULER_EXPLICI_HPP_INCLUDED
 
-#include "include/time-iter.hpp"
+#include "include/integration.hpp"
 
 
 class EulerExplicitIterator : public IntegrationMethodBase
 {
 public:
-    double calculate_delta(double t, double dt) override final;
+    void calculate_delta(double t, double dt) override final;
 };
 
 

@@ -9,139 +9,33 @@
 
 struct IntegrationParameters;
 struct IntegratorMetrics;
+class IErrorEstimator;
+class IVariable;
+class IRHS;
+class IIntegrator;
+class IntegrationError;
+class IBifurcator;
 
-class IVariable
+struct StepAdjustmentParameters
 {
-public:
-    virtual ~IVariable() {}
+    bool autoStepAdjustment = false;
+    double max_step_limit = 0.001;
+    double min_step_limit = 0.00001;
+    double rel_error_per_step_coarsening_treshold = 0.0001;
+    double rel_error_per_step_refining_treshold = 0.001;
 
-    /**
-     * Clear current value of delta and make x_current = x_previous
-     */
-    virtual void clear_subiteration() = 0;
-
-    /**
-     * Adds rhs multiplied by m to xDelta
-     */
-    virtual void add_rhs_to_delta(double m) = 0;
-
-    /**
-     * Makes xCurrent = xPrevious + rhs*dt
-     */
-    virtual void make_sub_iteration(double dt) = 0;
-
-    /**
-     * Makes xCurrent = xPrevious = xPrevious + xDelta; xDelta = 0;
-     */
-    virtual void step() = 0;
-
-    /**
-     * For precision control.
-     * Add all current values to vector. Vector may already contain something, use push_back
-     */
-    virtual void collect_values(std::vector<double>& values) = 0;
-
-    /**
-     * For precision control.
-     * Add all current deltas to vector. Vector may already contain something, use push_back
-     */
-    virtual void collect_deltas(std::vector<double>& deltas) = 0;
+    double step_refining_factor = 0.5;
+    double step_coarsening_factor = 1.5;
 };
 
-
-class IRHS
+struct IteratingMetrics
 {
-public:
-    virtual ~IRHS() {}
+    IteratingMetrics();
+    void reset();
 
-    /**
-     * Tasks that done before iteration (i.e. grid refinment)
-     */
-    virtual void pre_iteration_job(double time) {}
-
-    /**
-     * Tasks that done before sub iteration calculation
-     */
-    virtual void pre_sub_iteration_job(double time) {}
-
-    /** Calculate right hand side with values of
-     * f(time, xCurrent, xCurrent of other objects, secondaryValues of other objects)
-     */
-    virtual void calculate_rhs(double time) = 0;
-};
-
-class VariableScalar : public IVariable
-{
-public:
-    VariableScalar(double value = 0) : m_previous_value(value) { clear_subiteration(); }
-    void clear_subiteration() override { m_current_value = m_previous_value; m_delta = 0.0;}
-    void add_rhs_to_delta(double m) override { m_delta += m_rhs * m; }
-    void make_sub_iteration(double dt) override { m_current_value = m_previous_value + m_rhs * dt; }
-    void step() override { m_current_value = m_previous_value = m_previous_value + m_delta; m_delta = 0.0;}
-    void collect_values(std::vector<double>& values) override { values.push_back(m_current_value); }
-    void collect_deltas(std::vector<double>& deltas) override { deltas.push_back(m_delta); }
-
-    // API for IContinuousIterableLogic
-    double current_value() { return m_current_value; }
-    void set_rhs(double rhs) { m_rhs = rhs; }
-
-    // API for usage
-    operator double&()
-    {
-        return m_previous_value;
-    }
-private:
-    double m_previous_value;
-    double m_current_value;
-    double m_delta;
-    double m_rhs;
-};
-
-class ContinuousIterableLogicScalar : public IRHS
-{
-public:
-    using RHSFunction = std::function<double(double time, double x)>;
-    ContinuousIterableLogicScalar(VariableScalar& scalar, RHSFunction rhs) :
-        m_scalar(scalar), m_rhs_function(rhs)
-    {
-    }
-
-    void calculate_rhs(double time) override
-    {
-        double rhs = m_rhs_function(time, m_scalar.current_value());
-        m_scalar.set_rhs(rhs);
-    }
-
-private:
-    VariableScalar& m_scalar;
-    RHSFunction m_rhs_function;
-
-};
-
-class IBifurcator
-{
-public:
-    virtual ~IBifurcator() {}
-
-    virtual void prepare_bifurcation(double time, double dt) = 0;
-    virtual void do_bifurcation(double time, double dt) = 0;
-};
-
-class IIntegrator
-{
-public:
-    virtual ~IIntegrator() {}
-    virtual void set_variable(IVariable* variable) = 0;
-    virtual void set_logic(IRHS* variable) = 0;
-
-    virtual IVariable* get_variable() = 0;
-
-    /**
-     * Calculate delta for dt. If timestep adaptation enabled, timestep may be changed
-     * @return new timestep
-     */
-    virtual double calculate_delta(double t, double dt) = 0;
-    virtual const IntegratorMetrics& metrics() = 0;
+    std::vector<double> time_steps_log;
+    size_t max_step_limitations = 0;
+    size_t min_step_limitations = 0;
 };
 
 class ITimeHook
@@ -150,15 +44,6 @@ public:
     virtual ~ITimeHook() {}
     virtual void run_hook(double time) = 0;
     virtual double get_next_time() = 0;
-};
-
-struct IntegratorMetrics
-{
-    size_t totalStepCalculations = 0;
-    size_t timeIterations = 0;
-    size_t complexity = 0;
-
-    double adaptationEfficiency() { return double(timeIterations) / totalStepCalculations; }
 };
 
 class TimeHookPeriodic : public ITimeHook
@@ -183,29 +68,16 @@ private:
     double m_period = 1.0;
 };
 
-class IntegrationMethodBase : public IIntegrator
-{
-public:
-    void set_variable(IVariable* variable) override;
-    void set_logic(IRHS* logic) override;
-
-    IVariable* get_variable() override;
-
-    const IntegratorMetrics& metrics() override;
-
-protected:
-    IVariable *m_variable = nullptr;
-    IRHS *m_rhs = nullptr;
-    IntegratorMetrics m_metrics;
-};
-
 class TimeIterator
 {
 public:
     TimeIterator();
 
     void set_continious_iterator(IIntegrator* continious_iterator);
+    void set_error_estimator(IErrorEstimator* estimator);
     void set_bifurcator(IBifurcator* bifurcator);
+
+    StepAdjustmentParameters& step_adj_pars();
 
     void set_time(double time);
     void set_bifurcation_run_period(double bifurcationPeriod);
@@ -222,12 +94,21 @@ public:
     void iterate();
     void run();
 
+    const IteratingMetrics& metrics();
+    void reset_metrics();
+
     /**
      * Stop after current iteration. May be called from another thread
      */
     void stop();
 
 private:
+    /**
+     * Integrate ODE with step adjusting. Timestep (m_dt) may be changed
+     * @return time step for NEXT iteration
+     */
+    double integrate_iteration();
+    void bifurcate_iteration();
     void call_hook();
     void find_next_hook();
 
@@ -242,10 +123,13 @@ private:
     size_t m_nextHook = 0;
     bool m_needStop = false;
 
+    StepAdjustmentParameters m_step_adj_pars;
     IIntegrator* m_continiousIterator = nullptr;
+    IErrorEstimator* m_estimator = nullptr;
     IBifurcator* m_bifurcationIterable = nullptr;
 
     std::vector<ITimeHook*> m_timeHooks;
+    IteratingMetrics m_metrics;
 };
 
 class PeriodicStopHook : public TimeHookPeriodic

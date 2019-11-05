@@ -8,88 +8,13 @@
 #include "include/runge-kutta.hpp"
 #include <iostream>
 
-using namespace sotm;
 using namespace std;
 
 
-RungeKuttaIterator::RungeKuttaIterator(double step_precision) :
-    m_step_precision(step_precision)
-{
-}
-
-double RungeKuttaIterator::calculate_delta(double t, double dt)
+void RungeKuttaIterator::calculate_delta(double t, double dt)
 {
     m_rhs->pre_iteration_job(t);
-
-	for(;;) {
-		m_metrics.totalStepCalculations++;
-        make_subiterations(t, dt);
-
-        break;
-/*
-		// If step adjustment disabled
-		if (!m_parameters->autoStepAdjustment)
-			break;
-
-		// Now checking step to be optimal
-        double iterationsCount = m_target->get_minimal_steps_count();
-		if (m_parameters->outputVerboseLevel >= ContiniousIteratorParameters::VerboseLevel::more)
-		{
-			cout << "[R-K4] Min steps count estimated as " << iterationsCount << endl;
-		}
-
-		if (iterationsCount == IContinuousTimeIterable::stepsCountNotMatter)
-			break;
-
-		if (iterationsCount < m_parameters->iterationsPerAmplitudeMin)
-		{
-			// Step is too big
-			if (dt == m_stepMin)
-				break;
-
-            dt *= 0.6;
-            if (m_parameters->outputVerboseLevel >= ContiniousIteratorParameters::VerboseLevel::more)
-			{
-            	cout << "[R-K4] Deacreasing step to " << dt << endl;
-			}
-			if (dt < m_stepMin)
-				dt = m_stepMin;
-
-            m_target->clear_subiteration();
-			continue;
-		}
-		if (iterationsCount > m_parameters->iterationsPerAmplitudeMax)
-		{
-			// Step is smaller then enough
-			if (dt == m_stepMax)
-				break;
-
-            dt *= 1.5;
-			if (dt > m_stepMax)
-				dt = m_stepMax;
-			if (m_parameters->outputVerboseLevel >= ContiniousIteratorParameters::VerboseLevel::more)
-			{
-				cout << "[R-K4] Increasing step to " << dt << endl;
-			}
-
-			// But we should not recompute this iteration, it is done with step precise then enough
-			//m_target->clearSubiteration();
-			//continue;
-		}
-        break;*/
-	}
-
-	m_metrics.timeIterations++;
-    //m_metrics.complexity +=
-	//cout << (int)m_parameters->outputVerboseLevel << endl;
-    /*
-	if (m_parameters->outputVerboseLevel != ContiniousIteratorParameters::VerboseLevel::none)
-	{
-		cout << "[R-K4] Iteration done. t = " << m_time
-				<< ", dt = " << dt
-				<< ", efficiency = " << m_metrics.adaptationEfficiency() << endl;
-    }*/
-	return dt;
+    make_subiterations(t, dt);
 }
 
 void RungeKuttaIterator::make_subiterations(double t, double dt)

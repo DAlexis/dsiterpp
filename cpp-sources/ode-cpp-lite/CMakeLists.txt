@@ -8,6 +8,8 @@ set(LIB_SOURCE
     ${PROJECT_SOURCE_DIR}/src/runge-kutta.cpp
     ${PROJECT_SOURCE_DIR}/src/error-estimator.cpp
     ${PROJECT_SOURCE_DIR}/src/runge-error-estimator.cpp
+    ${PROJECT_SOURCE_DIR}/src/integration.cpp
+    ${PROJECT_SOURCE_DIR}/src/bifurcation.cpp
 )
 
 set(LIB_HPP
@@ -16,6 +18,8 @@ set(LIB_HPP
     ${PROJECT_SOURCE_DIR}/include/runge-kutta.hpp
     ${PROJECT_SOURCE_DIR}/include/error-estimator.hpp
     ${PROJECT_SOURCE_DIR}/include/runge-error-estimator.hpp
+    ${PROJECT_SOURCE_DIR}/include/integration.hpp
+    ${PROJECT_SOURCE_DIR}/include/bifurcation.hpp
 )
 
 # Include dirs that are used and will be exported 

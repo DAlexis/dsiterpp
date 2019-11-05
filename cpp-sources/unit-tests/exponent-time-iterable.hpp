@@ -9,6 +9,7 @@
 #define UNIT_TESTS_LIBSOTM_UT_TIME_ITER_EXPONENT_TIME_ITERABLE_HPP_
 
 #include "include/time-iter.hpp"
+#include "include/integration.hpp"
 
 class ExponentProblem
 {
@@ -17,11 +18,11 @@ public:
     void iterate(double t);
     double value();
 
-private:
-    IIntegrator* m_continious_iterator;
-    VariableScalar m_variable;
-    ContinuousIterableLogicScalar m_exp_logic;
-    TimeIterator m_time_iterator;
+
+    IIntegrator* continious_iterator;
+    VariableScalar variable;
+    RHSScalar exp_rhs;
+    TimeIterator time_iterator;
 
 };
 

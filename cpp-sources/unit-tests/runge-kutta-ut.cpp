@@ -7,7 +7,6 @@
 
 #include <iostream>
 
-using namespace sotm;
 using namespace std;
 
 TEST(RungeKutta, ExponentDiffEq)
