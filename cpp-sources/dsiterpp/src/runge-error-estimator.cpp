@@ -19,15 +19,21 @@ void RungeErrorEstimator::make_test_steps(double t, double dt)
 {
     m_values.clear();
     m_deltas_h.clear();
-    m_deltas_h_2.clear();
+    m_deltas_h_2_part_1.clear();
+    m_deltas_h_2_part_2.clear();
 
     m_integrator->get_variable()->collect_values(m_values);
-    m_integrator->calculate_delta(t, 2*dt);
-    m_integrator->get_variable()->collect_deltas(m_deltas_h);
-    m_integrator->get_variable()->clear_subiteration();
+
+    m_integrator->calculate_delta(t, dt / 2.0);
+    m_integrator->get_variable()->collect_deltas(m_deltas_h_2_part_1);
+    m_integrator->get_variable()->step();
+    m_integrator->calculate_delta(t + dt / 2.0, dt / 2.0);
+    m_integrator->get_variable()->collect_deltas(m_deltas_h_2_part_2);
+    auto it = m_values.cbegin();
+    m_integrator->get_variable()->set_values(it);
 
     m_integrator->calculate_delta(t, dt);
-    m_integrator->get_variable()->collect_deltas(m_deltas_h_2);
+    m_integrator->get_variable()->collect_deltas(m_deltas_h);
 }
 
 void RungeErrorEstimator::estimate_error()
@@ -37,7 +43,7 @@ void RungeErrorEstimator::estimate_error()
 
     for (size_t i = 0; i < m_values.size(); i++)
     {
-        double abs_error = fabs(m_deltas_h[i] - m_deltas_h_2[i]) * m_error_multiplier;
+        double abs_error = fabs(m_deltas_h[i] - (m_deltas_h_2_part_1[i] + m_deltas_h_2_part_2[i]) ) * m_error_multiplier;
         double base_value = fabs(m_values[i]) + fabs(m_deltas_h[i]);
         double rel_error = abs_error / base_value;
 

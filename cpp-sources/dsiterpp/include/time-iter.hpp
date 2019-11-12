@@ -21,11 +21,16 @@ struct StepAdjustmentParameters
     bool autoStepAdjustment = false;
     double max_step_limit = 0.001;
     double min_step_limit = 0.00001;
-    double rel_error_per_step_coarsening_treshold = 0.0001;
-    double rel_error_per_step_refining_treshold = 0.001;
+    double relative_deconvergence_speed_min = 0.001;
+    double relative_deconvergence_speed_max = 0.01;
+    /*double rel_error_per_step_coarsening_treshold = 0.0001;
+    double rel_error_per_step_refining_treshold = 0.001;*/
 
     double step_refining_factor = 0.5;
     double step_coarsening_factor = 1.5;
+
+    bool is_self_consistent();
+    void setup_relative_deconvergence_speed(double rel_err_per_second);
 };
 
 struct IteratingMetrics

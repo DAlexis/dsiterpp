@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
 
-project("ode-cpp-lite" CXX)
+project("dsiterpp-all" CXX)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
@@ -28,7 +28,7 @@ macro(export_libs)
         CACHE INTERNAL "${PROJECT_NAME}: used and exported libs" FORCE)
 endmacro()
 
-add_subdirectory(ode-cpp-lite)
+add_subdirectory(dsiterpp)
 
 # To enable ctest usage
 enable_testing()

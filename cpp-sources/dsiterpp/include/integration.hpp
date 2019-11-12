@@ -33,15 +33,20 @@ public:
      * For precision control.
      * Add all current values to vector. Vector may already contain something, use push_back
      */
-    virtual void collect_values(std::vector<double>& values) = 0;
+    virtual void collect_values(std::vector<double>& values) const = 0;
 
     /**
      * For precision control.
      * Add all current deltas to vector. Vector may already contain something, use push_back
      */
-    virtual void collect_deltas(std::vector<double>& deltas) = 0;
-};
+    virtual void collect_deltas(std::vector<double>& deltas) const = 0;
 
+    /**
+     * For precision control.
+     * Add all current values to vector. Vector may already contain something, use push_back
+     */
+    virtual void set_values(std::vector<double>::const_iterator& values) = 0;
+};
 
 class IRHS
 {
@@ -72,8 +77,9 @@ public:
     void add_rhs_to_delta(double m) override { m_delta += m_rhs * m; }
     void make_sub_iteration(double dt) override { m_current_value = m_previous_value + m_rhs * dt; }
     void step() override { m_current_value = m_previous_value = m_previous_value + m_delta; m_delta = 0.0;}
-    void collect_values(std::vector<double>& values) override { values.push_back(m_current_value); }
-    void collect_deltas(std::vector<double>& deltas) override { deltas.push_back(m_delta); }
+    void collect_values(std::vector<double>& values) const override { values.push_back(m_current_value); }
+    void collect_deltas(std::vector<double>& deltas) const override { deltas.push_back(m_delta); }
+    void set_values(std::vector<double>::const_iterator& values) override { m_previous_value = *(values++); clear_subiteration(); }
 
     // API for IContinuousIterableLogic
     double current_value() { return m_current_value; }

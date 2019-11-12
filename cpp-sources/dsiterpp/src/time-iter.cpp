@@ -5,6 +5,34 @@
 
 #include <iostream>
 
+#include <cmath>
+
+bool StepAdjustmentParameters::is_self_consistent()
+{
+    if (relative_deconvergence_speed_min > relative_deconvergence_speed_max)
+        return true;
+
+    if (!autoStepAdjustment)
+        return true;
+
+    if (step_refining_factor > 1.0)
+        return false;
+
+    if (max_step_limit * step_refining_factor < min_step_limit)
+        return false;
+
+    if (min_step_limit * step_coarsening_factor > max_step_limit)
+        return false;
+
+    return true;
+}
+
+void StepAdjustmentParameters::setup_relative_deconvergence_speed(double rel_err_per_second)
+{
+    relative_deconvergence_speed_max = rel_err_per_second;
+    relative_deconvergence_speed_min = relative_deconvergence_speed_max * 0.001;
+}
+
 IteratingMetrics::IteratingMetrics()
 {
 }
@@ -141,7 +169,8 @@ double TimeIterator::integrate_iteration()
         do {
             m_estimator->calculate_delta_and_estimate(m_time, m_dt);
             auto error = m_estimator->get_error();
-            error_is_ok = error.max_rel_error < m_step_adj_pars.rel_error_per_step_refining_treshold;
+            //error_is_ok = error.max_rel_error < m_step_adj_pars.rel_error_per_step_refining_treshold;
+            error_is_ok = error.max_rel_error < m_step_adj_pars.relative_deconvergence_speed_max * m_dt;
             if (!error_is_ok)
             {
                 m_dt *= m_step_adj_pars.step_refining_factor;
@@ -158,7 +187,8 @@ double TimeIterator::integrate_iteration()
                 }
             }
 
-            if (error.max_rel_error < m_step_adj_pars.rel_error_per_step_coarsening_treshold)
+            //if (error.max_rel_error < m_step_adj_pars.rel_error_per_step_coarsening_treshold)
+            if (error.max_rel_error < m_step_adj_pars.relative_deconvergence_speed_min * m_dt)
             {
                 next_dt = m_dt * m_step_adj_pars.step_coarsening_factor;
                 if (next_dt > m_step_adj_pars.max_step_limit)

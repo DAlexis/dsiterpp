@@ -19,7 +19,8 @@ private:
 
     std::vector<double> m_values;
     std::vector<double> m_deltas_h;
-    std::vector<double> m_deltas_h_2;
+    std::vector<double> m_deltas_h_2_part_1;
+    std::vector<double> m_deltas_h_2_part_2;
 };
 
 #endif // RUNGE_ERROR_ESTIMATOR_HPP_INCLUDED

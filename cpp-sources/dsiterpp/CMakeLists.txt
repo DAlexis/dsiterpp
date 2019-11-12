@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(ode-cpp-lite)
+project("dsiterpp")
 
 set(LIB_SOURCE
     ${PROJECT_SOURCE_DIR}/src/euler-explicit.cpp

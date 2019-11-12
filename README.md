@@ -1,5 +1,6 @@
-# ode-cpp-lite
-Simple interface-based lib to solve ordinary defferential equations
+# Dynamic System time ITERator on C++
+
+Simple OOP interface-based framework to solve ordinary defferential equations with bifurcations
 
 ## Tasks
 
@@ -7,7 +8,7 @@ Simple interface-based lib to solve ordinary defferential equations
 
 [x] Error estimation: interface, move out from RK
 
-[ ] Unit test for error estimator
+[x] Unit test for error estimator
 
 ### Low
 
