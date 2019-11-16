@@ -8,7 +8,9 @@
 #ifndef RUNGE_KUTTA_HPP_INCLUDED
 #define RUNGE_KUTTA_HPP_INCLUDED
 
-#include "include/integration.hpp"
+#include "dsiterpp/integration.hpp"
+
+namespace dsiterpp {
 
 class RungeKuttaIterator : public IntegrationMethodBase
 {
@@ -18,5 +20,7 @@ public:
 private:
     void make_subiterations(double t, double dt);
 };
+
+}
 
 #endif // RUNGE_KUTTA_HPP_INCLUDED

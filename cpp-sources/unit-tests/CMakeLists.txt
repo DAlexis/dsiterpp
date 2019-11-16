@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 2.8)
-
 project(dsiterpp-unit-tests)
 
 set(EXE_SOURCES
@@ -19,7 +17,7 @@ add_executable(${PROJECT_NAME} ${EXE_SOURCES} ${EXE_HPP})
 target_link_libraries (${PROJECT_NAME}
     gtest
     gtest_main
-	${dsiterpp_LIBRARY}
+    dsiterpp
 )
 
 add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})

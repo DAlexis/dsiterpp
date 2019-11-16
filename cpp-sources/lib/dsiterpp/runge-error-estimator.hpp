@@ -1,8 +1,10 @@
 #ifndef RUNGE_ERROR_ESTIMATOR_HPP_INCLUDED
 #define RUNGE_ERROR_ESTIMATOR_HPP_INCLUDED
 
-#include "include/error-estimator.hpp"
+#include "dsiterpp/error-estimator.hpp"
 #include <vector>
+
+namespace dsiterpp {
 
 class RungeErrorEstimator : public ErrorEstimatorBase
 {
@@ -22,5 +24,7 @@ private:
     std::vector<double> m_deltas_h_2_part_1;
     std::vector<double> m_deltas_h_2_part_2;
 };
+
+}
 
 #endif // RUNGE_ERROR_ESTIMATOR_HPP_INCLUDED

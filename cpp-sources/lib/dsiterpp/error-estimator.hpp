@@ -3,6 +3,8 @@
 
 #include <limits>
 
+namespace dsiterpp {
+
 class IIntegrator;
 
 struct IntegrationError
@@ -36,5 +38,7 @@ protected:
     IIntegrator* m_integrator = nullptr;
     IntegrationError m_error;
 };
+
+}
 
 #endif // EEROR_ESTIMATOR_HPP_INCLUDED

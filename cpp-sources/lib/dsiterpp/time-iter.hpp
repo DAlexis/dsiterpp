@@ -1,36 +1,33 @@
 #ifndef TIME_ITER_HPP
 #define TIME_ITER_HPP
 
+#include "utils.hpp"
+
 #include <vector>
 #include <functional>
 #include <limits>
 #include <cstddef>
 #include <cmath>
 
-struct IntegrationParameters;
-struct IntegratorMetrics;
+namespace dsiterpp {
+
 class IErrorEstimator;
-class IVariable;
-class IRHS;
 class IIntegrator;
-class IntegrationError;
 class IBifurcator;
 
 struct StepAdjustmentParameters
 {
+    bool is_self_consistent();
+    void setup_relative_deconvergence_speed(double rel_err_per_second);
+
     bool autoStepAdjustment = false;
     double max_step_limit = 0.001;
     double min_step_limit = 0.00001;
     double relative_deconvergence_speed_min = 0.001;
     double relative_deconvergence_speed_max = 0.01;
-    /*double rel_error_per_step_coarsening_treshold = 0.0001;
-    double rel_error_per_step_refining_treshold = 0.001;*/
 
     double step_refining_factor = 0.5;
     double step_coarsening_factor = 1.5;
-
-    bool is_self_consistent();
-    void setup_relative_deconvergence_speed(double rel_err_per_second);
 };
 
 struct IteratingMetrics
@@ -140,12 +137,13 @@ private:
 class PeriodicStopHook : public TimeHookPeriodic
 {
 public:
-    PeriodicStopHook(TimeIterator* iterator) : m_iterator(iterator) {}
-    void hook(double time, double wantedTime) override { /*UNUSED_ARG(time); UNUSED_ARG(wantedTime);*/ m_iterator->stop(); }
+    PeriodicStopHook(TimeIterator* iterator);
+    void hook(double time, double wantedTime) override;
 
 private:
     TimeIterator* m_iterator;
 };
 
+}
 
 #endif // TIME_ITER_HPP

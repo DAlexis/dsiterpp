@@ -8,8 +8,9 @@
 #ifndef EULER_EXPLICI_HPP_INCLUDED
 #define EULER_EXPLICI_HPP_INCLUDED
 
-#include "include/integration.hpp"
+#include "dsiterpp/integration.hpp"
 
+namespace dsiterpp {
 
 class EulerExplicitIterator : public IntegrationMethodBase
 {
@@ -17,5 +18,6 @@ public:
     void calculate_delta(double t, double dt) override final;
 };
 
+}
 
 #endif // EULER_EXPLICI_HPP_INCLUDED

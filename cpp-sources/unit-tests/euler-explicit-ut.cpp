@@ -1,8 +1,10 @@
 #include "exponent-time-iterable.hpp"
-#include "include/euler-explicit.hpp"
+#include "dsiterpp/euler-explicit.hpp"
 #include <cmath>
 
 #include "gtest/gtest.h"
+
+using namespace dsiterpp;
 
 TEST(EulerExplicit, ExponentDiffEq)
 {

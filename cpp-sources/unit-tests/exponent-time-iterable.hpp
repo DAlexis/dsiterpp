@@ -8,8 +8,10 @@
 #ifndef UNIT_TESTS_LIBSOTM_UT_TIME_ITER_EXPONENT_TIME_ITERABLE_HPP_
 #define UNIT_TESTS_LIBSOTM_UT_TIME_ITER_EXPONENT_TIME_ITERABLE_HPP_
 
-#include "include/time-iter.hpp"
-#include "include/integration.hpp"
+#include "dsiterpp/time-iter.hpp"
+#include "dsiterpp/integration.hpp"
+
+namespace dsiterpp {
 
 class ExponentProblem
 {
@@ -26,5 +28,6 @@ public:
 
 };
 
+}
 
 #endif /* UNIT_TESTS_LIBSOTM_UT_TIME_ITER_EXPONENT_TIME_ITERABLE_HPP_ */

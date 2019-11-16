@@ -5,11 +5,11 @@
  *      Author: dalexies
  */
 
-#include "include/runge-kutta.hpp"
+#include "dsiterpp/runge-kutta.hpp"
 #include <iostream>
 
 using namespace std;
-
+using namespace dsiterpp;
 
 void RungeKuttaIterator::calculate_delta(double t, double dt)
 {

@@ -1,11 +1,13 @@
-#include "include/time-iter.hpp"
-#include "include/integration.hpp"
-#include "include/bifurcation.hpp"
-#include "include/error-estimator.hpp"
+#include "dsiterpp/time-iter.hpp"
+#include "dsiterpp/integration.hpp"
+#include "dsiterpp/bifurcation.hpp"
+#include "dsiterpp/error-estimator.hpp"
 
 #include <iostream>
 
 #include <cmath>
+
+using namespace dsiterpp;
 
 bool StepAdjustmentParameters::is_self_consistent()
 {
@@ -271,4 +273,14 @@ void TimeIterator::reset_metrics()
 void TimeIterator::stop()
 {
 	m_needStop = true;
+}
+
+PeriodicStopHook::PeriodicStopHook(TimeIterator* iterator) :
+    m_iterator(iterator)
+{
+}
+
+void PeriodicStopHook::hook(double time, double wantedTime)
+{
+    DSITERPP_UNUSED(time);  DSITERPP_UNUSED(wantedTime); m_iterator->stop();
 }

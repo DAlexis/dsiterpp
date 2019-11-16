@@ -1,7 +1,9 @@
-#include "include/runge-error-estimator.hpp"
-#include "include/integration.hpp"
+#include "dsiterpp/runge-error-estimator.hpp"
+#include "dsiterpp/integration.hpp"
 
 #include <cmath>
+
+using namespace dsiterpp;
 
 RungeErrorEstimator::RungeErrorEstimator(int method_order) :
     m_order(method_order)

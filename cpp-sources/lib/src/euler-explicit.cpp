@@ -1,4 +1,6 @@
-#include "include/euler-explicit.hpp"
+#include "dsiterpp/euler-explicit.hpp"
+
+using namespace dsiterpp;
 
 void EulerExplicitIterator::calculate_delta(double t, double dt)
 {

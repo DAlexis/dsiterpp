@@ -1,4 +1,6 @@
-#include "include/error-estimator.hpp"
+#include "dsiterpp/error-estimator.hpp"
+
+using namespace dsiterpp;
 
 void ErrorEstimatorBase::set_integrator(IIntegrator* integrator)
 {

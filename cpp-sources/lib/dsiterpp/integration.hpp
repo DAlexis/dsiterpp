@@ -1,8 +1,12 @@
 #ifndef INTEGRATION_HPP_INCLUDED
 #define INTEGRATION_HPP_INCLUDED
 
+#include "utils.hpp"
+
 #include <vector>
 #include <functional>
+
+namespace dsiterpp {
 
 class IVariable
 {
@@ -56,12 +60,12 @@ public:
     /**
      * Tasks that done before iteration (i.e. grid refinment)
      */
-    virtual void pre_iteration_job(double time) {}
+    virtual void pre_iteration_job(double time) { DSITERPP_UNUSED(time); }
 
     /**
      * Tasks that done before sub iteration calculation
      */
-    virtual void pre_sub_iteration_job(double time) {}
+    virtual void pre_sub_iteration_job(double time) { DSITERPP_UNUSED(time); }
 
     /** Calculate right hand side with values of
      * f(time, xCurrent, xCurrent of other objects, secondaryValues of other objects)
@@ -72,24 +76,22 @@ public:
 class VariableScalar : public IVariable
 {
 public:
-    VariableScalar(double value = 0) : m_previous_value(value) { clear_subiteration(); }
-    void clear_subiteration() override { m_current_value = m_previous_value; m_delta = 0.0;}
-    void add_rhs_to_delta(double m) override { m_delta += m_rhs * m; }
-    void make_sub_iteration(double dt) override { m_current_value = m_previous_value + m_rhs * dt; }
-    void step() override { m_current_value = m_previous_value = m_previous_value + m_delta; m_delta = 0.0;}
-    void collect_values(std::vector<double>& values) const override { values.push_back(m_current_value); }
-    void collect_deltas(std::vector<double>& deltas) const override { deltas.push_back(m_delta); }
-    void set_values(std::vector<double>::const_iterator& values) override { m_previous_value = *(values++); clear_subiteration(); }
+    VariableScalar(double value = 0);
+    void clear_subiteration() override;
+    void add_rhs_to_delta(double m) override;
+    void make_sub_iteration(double dt) override;
+    void step() override;
+    void collect_values(std::vector<double>& values) const override;
+    void collect_deltas(std::vector<double>& deltas) const override;
+    void set_values(std::vector<double>::const_iterator& values) override;
 
     // API for IContinuousIterableLogic
-    double current_value() { return m_current_value; }
-    void set_rhs(double rhs) { m_rhs = rhs; }
+    double current_value();
+    void set_rhs(double rhs);
 
     // API for usage
-    operator double&()
-    {
-        return m_previous_value;
-    }
+    operator double&();
+
 private:
     double m_previous_value;
     double m_current_value;
@@ -101,30 +103,14 @@ class RHSScalar : public IRHS
 {
 public:
     using RHSFunction = std::function<double(double time, double x)>;
-    RHSScalar(VariableScalar& scalar, RHSFunction rhs) :
-        m_scalar(scalar), m_rhs_function(rhs)
-    {
-    }
+    RHSScalar(VariableScalar& scalar, RHSFunction rhs);
 
-    void calculate_rhs(double time) override
-    {
-        double rhs = m_rhs_function(time, m_scalar.current_value());
-        m_scalar.set_rhs(rhs);
-    }
+    void calculate_rhs(double time) override;
 
 private:
     VariableScalar& m_scalar;
     RHSFunction m_rhs_function;
 
-};
-
-struct IntegratorMetrics
-{
-    size_t totalStepCalculations = 0;
-    size_t timeIterations = 0;
-    size_t complexity = 0;
-
-    double adaptationEfficiency() { return double(timeIterations) / totalStepCalculations; }
 };
 
 class IIntegrator
@@ -140,7 +126,6 @@ public:
      * Calculate delta for specified t and dt
      */
     virtual void calculate_delta(double t, double dt) = 0;
-    virtual const IntegratorMetrics& metrics() = 0;
 };
 
 
@@ -152,12 +137,11 @@ public:
 
     IVariable* get_variable() override;
 
-    const IntegratorMetrics& metrics() override;
-
 protected:
     IVariable *m_variable = nullptr;
     IRHS *m_rhs = nullptr;
-    IntegratorMetrics m_metrics;
 };
+
+}
 
 #endif // INTEGRATION_HPP_INCLUDED

@@ -1,6 +1,6 @@
 #include "exponent-time-iterable.hpp"
-#include "include/runge-kutta.hpp"
-#include "include/euler-explicit.hpp"
+#include "dsiterpp/runge-kutta.hpp"
+#include "dsiterpp/euler-explicit.hpp"
 #include <cmath>
 
 #include "gtest/gtest.h"
@@ -8,6 +8,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace dsiterpp;
 
 TEST(RungeKutta, ExponentDiffEq)
 {

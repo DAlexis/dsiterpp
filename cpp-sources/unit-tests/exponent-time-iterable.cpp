@@ -7,6 +7,8 @@
 
 #include "exponent-time-iterable.hpp"
 
+using namespace dsiterpp;
+
 ExponentProblem::ExponentProblem(IIntegrator* continious_iterator, double initial_value) :
     continious_iterator(continious_iterator), variable(initial_value),
     exp_rhs(variable, [](double t, double x) { return x; } )
