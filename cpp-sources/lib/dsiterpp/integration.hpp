@@ -99,6 +99,22 @@ private:
     double m_rhs;
 };
 
+class VariablesGroup : public IVariable
+{
+public:
+    void add_variable(IVariable& var);
+
+    void clear_subiteration() override;
+    void add_rhs_to_delta(double m) override;
+    void make_sub_iteration(double dt) override;
+    void step() override;
+    void collect_values(std::vector<double>& values) const override;
+    void collect_deltas(std::vector<double>& deltas) const override;
+    void set_values(std::vector<double>::const_iterator& values) override;
+
+private:
+    std::vector<IVariable*> m_variables;};
+
 class RHSScalar : public IRHS
 {
 public:
@@ -127,7 +143,6 @@ public:
      */
     virtual void calculate_delta(double t, double dt) = 0;
 };
-
 
 class IntegrationMethodBase : public IIntegrator
 {

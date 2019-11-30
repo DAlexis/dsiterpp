@@ -62,6 +62,60 @@ VariableScalar::operator double&()
     return m_previous_value;
 }
 
+void VariablesGroup::add_variable(IVariable& var)
+{
+    m_variables.push_back(&var);
+}
+
+void VariablesGroup::clear_subiteration()
+{
+    for (auto &var : m_variables) {
+        var->clear_subiteration();
+    }
+}
+
+void VariablesGroup::add_rhs_to_delta(double m)
+{
+    for (auto &var : m_variables) {
+        var->add_rhs_to_delta(m);
+    }
+}
+
+void VariablesGroup::make_sub_iteration(double dt)
+{
+    for (auto &var : m_variables) {
+        var->make_sub_iteration(dt);
+    }
+}
+
+void VariablesGroup::step()
+{
+    for (auto &var : m_variables) {
+        var->step();
+    }
+}
+
+void VariablesGroup::collect_values(std::vector<double>& values) const
+{
+    for (auto &var : m_variables) {
+        var->collect_values(values);
+    }
+}
+
+void VariablesGroup::collect_deltas(std::vector<double>& deltas) const
+{
+    for (auto &var : m_variables) {
+        var->collect_deltas(deltas);
+    }
+}
+
+void VariablesGroup::set_values(std::vector<double>::const_iterator& values)
+{
+    for (auto &var : m_variables) {
+        var->set_values(values);
+    }
+}
+
 
 /////////////////////////////////
 // RHSScalar
