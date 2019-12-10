@@ -116,6 +116,35 @@ void VariablesGroup::set_values(std::vector<double>::const_iterator& values)
     }
 }
 
+void RHSGroup::add_rhs(IRHS* rhs)
+{
+    m_RHSs.push_back(rhs);
+}
+
+void RHSGroup::pre_iteration_job(double time)
+{
+    for (auto rhs : m_RHSs)
+    {
+        rhs->pre_iteration_job(time);
+    }
+}
+
+void RHSGroup::pre_sub_iteration_job(double time)
+{
+    for (auto rhs : m_RHSs)
+    {
+        rhs->pre_sub_iteration_job(time);
+    }
+}
+
+void RHSGroup::calculate_rhs(double time)
+{
+    for (auto rhs : m_RHSs)
+    {
+        rhs->calculate_rhs(time);
+    }
+}
+
 
 /////////////////////////////////
 // RHSScalar
@@ -129,22 +158,4 @@ void RHSScalar::calculate_rhs(double time)
 {
     double rhs = m_rhs_function(time, m_scalar.current_value());
     m_scalar.set_rhs(rhs);
-}
-
-////////////////////////////////
-// ContinuousTimeIteratorBase
-
-void IntegrationMethodBase::set_variable(IVariable* variable)
-{
-    m_variable = variable;
-}
-
-void IntegrationMethodBase::set_rhs(IRHS* logic)
-{
-    m_rhs = logic;
-}
-
-IVariable* IntegrationMethodBase::get_variable()
-{
-    return m_variable;
 }

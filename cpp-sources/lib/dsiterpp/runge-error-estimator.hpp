@@ -9,14 +9,13 @@ namespace dsiterpp {
 class RungeErrorEstimator : public ErrorEstimatorBase
 {
 public:
-    RungeErrorEstimator(int method_order);
-    void calculate_delta_and_estimate(double t, double dt) override;
+    RungeErrorEstimator();
+    void calculate_delta_and_estimate(IVariable* variable, IRHS* rhs, double t, double dt) override;
 
 private:
-    void make_test_steps(double t, double dt);
+    void make_test_steps(IVariable* variable, IRHS* rhs, double t, double dt);
     void estimate_error();
 
-    int m_order;
     double m_error_multiplier;
 
     std::vector<double> m_values;

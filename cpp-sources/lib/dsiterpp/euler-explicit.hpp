@@ -12,10 +12,11 @@
 
 namespace dsiterpp {
 
-class EulerExplicitIterator : public IntegrationMethodBase
+class EulerExplicitIterator : public IIntegrator
 {
 public:
-    void calculate_delta(double t, double dt) override final;
+    void calculate_delta(IVariable* variable, IRHS* rhs, double t, double dt) const override final;
+    int method_order() const override final;
 };
 
 }

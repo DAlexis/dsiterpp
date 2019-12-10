@@ -6,6 +6,8 @@
 namespace dsiterpp {
 
 class IIntegrator;
+class IVariable;
+class IRHS;
 
 struct IntegrationError
 {
@@ -23,7 +25,7 @@ public:
     /**
      * Calculate delta at point t with step dt and estimate errors
      */
-    virtual void calculate_delta_and_estimate(double t, double dt) = 0;
+    virtual void calculate_delta_and_estimate(IVariable* variable, IRHS* rhs, double t, double dt) = 0;
 
     virtual const IntegrationError& get_error() = 0;
 };

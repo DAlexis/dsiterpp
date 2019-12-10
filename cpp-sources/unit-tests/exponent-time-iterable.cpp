@@ -13,8 +13,8 @@ ExponentProblem::ExponentProblem(IIntegrator* continious_iterator, double initia
     continious_iterator(continious_iterator), variable(initial_value),
     exp_rhs(variable, [](double t, double x) { return x; } )
 {
-    continious_iterator->set_variable(&variable);
-    continious_iterator->set_rhs(&exp_rhs);
+    time_iterator.set_variable(&variable);
+    time_iterator.set_rhs(&exp_rhs);
     time_iterator.set_continious_iterator(continious_iterator);
 }
 

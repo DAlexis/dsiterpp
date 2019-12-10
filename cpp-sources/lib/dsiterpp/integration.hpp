@@ -70,7 +70,7 @@ public:
     /** Calculate right hand side with values of
      * f(time, xCurrent, xCurrent of other objects, secondaryValues of other objects)
      */
-    virtual void calculate_rhs(double time) = 0;
+    virtual void calculate_rhs(double time) { DSITERPP_UNUSED(time); }
 };
 
 class VariableScalar : public IVariable
@@ -113,7 +113,20 @@ public:
     void set_values(std::vector<double>::const_iterator& values) override;
 
 private:
-    std::vector<IVariable*> m_variables;};
+    std::vector<IVariable*> m_variables;
+};
+
+class RHSGroup : public IRHS
+{
+public:
+    void add_rhs(IRHS* rhs);
+
+    void pre_iteration_job(double time) override;
+    void pre_sub_iteration_job(double time) override;
+    void calculate_rhs(double time) override;
+private:
+    std::vector<IRHS*> m_RHSs;
+};
 
 class RHSScalar : public IRHS
 {
@@ -133,28 +146,13 @@ class IIntegrator
 {
 public:
     virtual ~IIntegrator() {}
-    virtual void set_variable(IVariable* variable) = 0;
-    virtual void set_rhs(IRHS* variable) = 0;
-
-    virtual IVariable* get_variable() = 0;
 
     /**
      * Calculate delta for specified t and dt
      */
-    virtual void calculate_delta(double t, double dt) = 0;
-};
+    virtual void calculate_delta(IVariable* variable, IRHS* rhs, double t, double dt) const = 0;
 
-class IntegrationMethodBase : public IIntegrator
-{
-public:
-    void set_variable(IVariable* variable) override;
-    void set_rhs(IRHS* logic) override;
-
-    IVariable* get_variable() override;
-
-protected:
-    IVariable *m_variable = nullptr;
-    IRHS *m_rhs = nullptr;
+    virtual int method_order() const = 0;
 };
 
 }

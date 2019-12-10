@@ -12,13 +12,11 @@
 
 namespace dsiterpp {
 
-class RungeKuttaIterator : public IntegrationMethodBase
+class RungeKuttaIterator : public IIntegrator
 {
 public:
-    void calculate_delta(double t, double dt) override final;
-
-private:
-    void make_subiterations(double t, double dt);
+    void calculate_delta(IVariable* variable, IRHS* rhs, double t, double dt) const override final;
+    int method_order() const override final;
 };
 
 }

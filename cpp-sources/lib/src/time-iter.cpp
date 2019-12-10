@@ -78,6 +78,16 @@ TimeIterator::TimeIterator()
     //ASSERT(continiousIterator != nullptr, "continiousIterator cannot be a nullptr");
 }
 
+void TimeIterator::set_variable(IVariable* variable)
+{
+    m_variable = variable;
+}
+
+void TimeIterator::set_rhs(IRHS* rhs)
+{
+    m_rhs = rhs;
+}
+
 void TimeIterator::set_continious_iterator(IIntegrator* continious_iterator)
 {
     m_continiousIterator = continious_iterator;
@@ -146,6 +156,7 @@ bool TimeIterator::is_done()
 
 void TimeIterator::iterate()
 {
+    assert_pointers_are_set();
     double next_dt = integrate_iteration();
     bifurcate_iteration();
     call_hook();
@@ -169,7 +180,7 @@ double TimeIterator::integrate_iteration()
         m_estimator->set_integrator(m_continiousIterator);
         bool error_is_ok = false;
         do {
-            m_estimator->calculate_delta_and_estimate(m_time, m_dt);
+            m_estimator->calculate_delta_and_estimate(m_variable, m_rhs, m_time, m_dt);
             auto error = m_estimator->get_error();
             //error_is_ok = error.max_rel_error < m_step_adj_pars.rel_error_per_step_refining_treshold;
             error_is_ok = error.max_rel_error < m_step_adj_pars.relative_deconvergence_speed_max * m_dt;
@@ -177,7 +188,7 @@ double TimeIterator::integrate_iteration()
             {
                 m_dt *= m_step_adj_pars.step_refining_factor;
                 next_dt = m_dt;
-                m_continiousIterator->get_variable()->clear_subiteration();
+                m_variable->clear_subiteration();
                 if (m_dt < m_step_adj_pars.min_step_limit)
                 {
                     // throttling
@@ -200,10 +211,10 @@ double TimeIterator::integrate_iteration()
                 }
             }
         } while (!error_is_ok);
-        m_continiousIterator->get_variable()->step();
+        m_variable->step();
     } else {
-        m_continiousIterator->calculate_delta(m_time, m_dt);
-        m_continiousIterator->get_variable()->step();
+        m_continiousIterator->calculate_delta(m_variable, m_rhs, m_time, m_dt);
+        m_variable->step();
     }
     return next_dt;
 }
@@ -248,6 +259,16 @@ void TimeIterator::find_next_hook()
 			m_nextHookTime = candidatTime;
 		}
 	}
+}
+
+void TimeIterator::assert_pointers_are_set()
+{
+    if (!m_variable)
+        throw std::runtime_error("TimeIterator: variable is not set");
+    if (!m_rhs)
+        throw std::runtime_error("TimeIterator: RHS is not set");
+    if (!m_continiousIterator)
+        throw std::runtime_error("TimeIterator: IIntegrator is not set");
 }
 
 void TimeIterator::run()

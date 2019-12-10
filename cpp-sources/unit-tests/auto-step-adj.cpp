@@ -12,7 +12,7 @@ TEST(AutoStepAdj, EulerBasedTest)
     double time_limit = 3.0;
     double allowed_result_relative_error = 0.01;
     EulerExplicitIterator euler;
-    RungeErrorEstimator estimator(1);
+    RungeErrorEstimator estimator;
 
     ExponentProblem exp_problem(&euler, 1.0);
     exp_problem.time_iterator.set_error_estimator(&estimator);

@@ -5,37 +5,36 @@
 
 using namespace dsiterpp;
 
-RungeErrorEstimator::RungeErrorEstimator(int method_order) :
-    m_order(method_order)
+RungeErrorEstimator::RungeErrorEstimator()
 {
-    m_error_multiplier = 1.0 / (pow(2, method_order) - 1);
+    m_error_multiplier = 1.0 / (pow(2, m_integrator->method_order()) - 1);
 }
 
-void RungeErrorEstimator::calculate_delta_and_estimate(double t, double dt)
+void RungeErrorEstimator::calculate_delta_and_estimate(IVariable* variable, IRHS* rhs, double t, double dt)
 {
-    make_test_steps(t, dt);
+    make_test_steps(variable, rhs, t, dt);
     estimate_error();
 }
 
-void RungeErrorEstimator::make_test_steps(double t, double dt)
+void RungeErrorEstimator::make_test_steps(IVariable* variable, IRHS* rhs, double t, double dt)
 {
     m_values.clear();
     m_deltas_h.clear();
     m_deltas_h_2_part_1.clear();
     m_deltas_h_2_part_2.clear();
 
-    m_integrator->get_variable()->collect_values(m_values);
+    variable->collect_values(m_values);
 
-    m_integrator->calculate_delta(t, dt / 2.0);
-    m_integrator->get_variable()->collect_deltas(m_deltas_h_2_part_1);
-    m_integrator->get_variable()->step();
-    m_integrator->calculate_delta(t + dt / 2.0, dt / 2.0);
-    m_integrator->get_variable()->collect_deltas(m_deltas_h_2_part_2);
+    m_integrator->calculate_delta(variable, rhs, t, dt / 2.0);
+    variable->collect_deltas(m_deltas_h_2_part_1);
+    variable->step();
+    m_integrator->calculate_delta(variable, rhs, t + dt / 2.0, dt / 2.0);
+    variable->collect_deltas(m_deltas_h_2_part_2);
     auto it = m_values.cbegin();
-    m_integrator->get_variable()->set_values(it);
+    variable->set_values(it);
 
-    m_integrator->calculate_delta(t, dt);
-    m_integrator->get_variable()->collect_deltas(m_deltas_h);
+    m_integrator->calculate_delta(variable, rhs, t, dt);
+    variable->collect_deltas(m_deltas_h);
 }
 
 void RungeErrorEstimator::estimate_error()

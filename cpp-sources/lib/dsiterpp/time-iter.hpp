@@ -12,6 +12,8 @@
 namespace dsiterpp {
 
 class IErrorEstimator;
+class IVariable;
+class IRHS;
 class IIntegrator;
 class IBifurcator;
 
@@ -75,6 +77,8 @@ class TimeIterator
 public:
     TimeIterator();
 
+    void set_variable(IVariable* variable);
+    void set_rhs(IRHS* rhs);
     void set_continious_iterator(IIntegrator* continious_iterator);
     void set_error_estimator(IErrorEstimator* estimator);
     void set_bifurcator(IBifurcator* bifurcator);
@@ -114,6 +118,8 @@ private:
     void call_hook();
     void find_next_hook();
 
+    void assert_pointers_are_set();
+
     double m_time = 0.0;
 
     double m_stopTime = 1.0;
@@ -126,6 +132,9 @@ private:
     bool m_needStop = false;
 
     StepAdjustmentParameters m_step_adj_pars;
+
+    IVariable* m_variable = nullptr;
+    IRHS* m_rhs = nullptr;
     IIntegrator* m_continiousIterator = nullptr;
     IErrorEstimator* m_estimator = nullptr;
     IBifurcator* m_bifurcationIterable = nullptr;
