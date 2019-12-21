@@ -7,13 +7,18 @@ using namespace dsiterpp;
 
 RungeErrorEstimator::RungeErrorEstimator()
 {
-    m_error_multiplier = 1.0 / (pow(2, m_integrator->method_order()) - 1);
 }
 
 void RungeErrorEstimator::calculate_delta_and_estimate(IVariable* variable, IRHS* rhs, double t, double dt)
 {
     make_test_steps(variable, rhs, t, dt);
     estimate_error();
+}
+
+void RungeErrorEstimator::set_integrator(IIntegrator* integrator)
+{
+    ErrorEstimatorBase::set_integrator(integrator);
+    m_error_multiplier = 1.0 / (pow(2, m_integrator->method_order()) - 1);
 }
 
 void RungeErrorEstimator::make_test_steps(IVariable* variable, IRHS* rhs, double t, double dt)

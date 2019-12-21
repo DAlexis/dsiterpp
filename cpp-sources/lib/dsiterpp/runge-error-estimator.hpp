@@ -11,6 +11,7 @@ class RungeErrorEstimator : public ErrorEstimatorBase
 public:
     RungeErrorEstimator();
     void calculate_delta_and_estimate(IVariable* variable, IRHS* rhs, double t, double dt) override;
+    void set_integrator(IIntegrator* integrator) override;
 
 private:
     void make_test_steps(IVariable* variable, IRHS* rhs, double t, double dt);
