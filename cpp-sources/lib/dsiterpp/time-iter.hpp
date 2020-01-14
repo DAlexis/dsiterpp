@@ -64,12 +64,26 @@ public:
      * @param realTime Model time of calling hook
      * @param wantedTime Time hook was planned to run. Usually lesser than realTime
      */
-    virtual void hook(double realTime, double wantedTime) = 0;
+    virtual void hook(double real_time, double wanted_time) = 0;
 
 private:
     double m_nextRun = 0;
-    double m_lastRun = 0.0;
     double m_period = 1.0;
+
+protected:
+    double m_lastRun = 0.0;
+};
+
+class TimeHookPeriodicFunc : public TimeHookPeriodic
+{
+public:
+    using HookFunc = std::function<void(double real_time, double wanted_time)>;
+
+    TimeHookPeriodicFunc(HookFunc tagret_func);
+    void hook(double real_time, double wanted_time) override;
+
+private:
+    HookFunc m_hook_func;
 };
 
 class TimeIterator

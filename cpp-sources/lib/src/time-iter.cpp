@@ -4,6 +4,7 @@
 #include "dsiterpp/error-estimator.hpp"
 
 #include <iostream>
+#include <algorithm>
 
 #include <cmath>
 
@@ -47,8 +48,7 @@ void IteratingMetrics::reset()
 
 void TimeHookPeriodic::run_hook(double time)
 {
-	std::cout << "Next run: " << m_nextRun << std::endl;
-	//m_lastRun = time;
+    m_lastRun = time;
 	hook(time, m_nextRun);
 	m_nextRun += m_period;
 }
@@ -67,6 +67,16 @@ void TimeHookPeriodic::set_period(double period)
 double TimeHookPeriodic::get_period()
 {
 	return m_period;
+}
+
+TimeHookPeriodicFunc::TimeHookPeriodicFunc(HookFunc tagret_func) :
+    m_hook_func(tagret_func)
+{
+}
+
+void TimeHookPeriodicFunc::hook(double real_time, double wanted_time)
+{
+    m_hook_func(real_time, wanted_time);
 }
 
 /////////////////////////
@@ -157,9 +167,9 @@ bool TimeIterator::is_done()
 void TimeIterator::iterate()
 {
     assert_pointers_are_set();
+    call_hook();
     double next_dt = integrate_iteration();
     bifurcate_iteration();
-    call_hook();
 
     m_metrics.time_steps_log.push_back(m_dt);
 
@@ -174,6 +184,9 @@ double TimeIterator::integrate_iteration()
         throw std::logic_error("Error estimator must be set to use auto step ajustment");
 
     double next_dt = m_dt;
+
+    // If user set values, he set previous ones, so lets write previous to current reset deltas
+    m_variable->clear_subiteration();
 
     if (m_step_adj_pars.autoStepAdjustment)
     {
@@ -238,11 +251,34 @@ void TimeIterator::call_hook()
 	if (m_timeHooks.empty())
 		return;
 
-    if (m_time >= m_nextHookTime)
-	{
-        m_timeHooks[m_nextHook]->run_hook(m_time);
-        find_next_hook();
-	}
+    using THPair = std::pair<double, ITimeHook*>;
+
+    // Searching for hooks ready to be called
+    std::vector<THPair> hooks_to_call_now;
+    for (auto &hook : m_timeHooks)
+    {
+        double this_hook_time = hook->get_next_time();
+        if (this_hook_time <= m_time)
+        {
+            hooks_to_call_now.push_back(THPair(this_hook_time, hook));
+        }
+    }
+
+    // Sorting it by call time (important in case of many hooks applicable for one iteration)
+    std::sort(
+        hooks_to_call_now.begin(),
+        hooks_to_call_now.end(),
+        [](const THPair& p1, const THPair& p2)
+        {
+            return p1.first < p2.first;
+        }
+    );
+
+    // Calling
+    for (auto &time_hook_pair : hooks_to_call_now)
+    {
+        time_hook_pair.second->run_hook(m_time);
+    }
 }
 
 void TimeIterator::find_next_hook()
@@ -274,8 +310,6 @@ void TimeIterator::assert_pointers_are_set()
 void TimeIterator::run()
 {
 	m_needStop = false;
-    find_next_hook();
-	// std::cout << "Next hook: " << m_nextHookTime << std::endl;
     while (!is_done() && !m_needStop)
 		iterate();
 }
